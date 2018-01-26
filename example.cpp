@@ -2,12 +2,13 @@
 #include <algorithm>
 #include <vector>
 
-std::vector<int> reverse_it_impl(std::vector<int> in){
+template<T>
+std::vector<T> reverse_it_impl(std::vector<T> in){
 	return std::reverse(in) 
 }
 
 
-/* Reverse a sequence and extract the data with buffer interface */
+/* Reverse a bytes array and extract the data with buffer interface */
 static PyObject *
 reverse_it_fast(PyObject *self, PyObject *args){
 	PyObject* incoming;
@@ -18,34 +19,44 @@ reverse_it_fast(PyObject *self, PyObject *args){
 		/* TODO: perhaps raise BufferError via PyExc_BufferError? */
 		return NULL;
 	}
-	Py_buffer* view;
+	Py_buffer view;
 	int buffer_acquisition_result;
-	buffer_acquisition_result = PyObject_GetBuffer(incoming, view);
+	buffer_acquisition_result = PyObject_GetBuffer(incoming, &view);
 
-    /* Fill the std::vector with the buffer contents */
-	std::vector<int> original_data;
-	original_data.assign(view.buf, view.buf + view.len);
+	/* Fill the std::vector with the buffer contents */
+	std::vector<char> original_data;
+	original_data.assign(&views->buf, &view->buf + &view->len);
+	PyBuffer_Release(&view);
+
 	std::vector reversed = reverse_it_impl(original_data);
-	PyBuffer_Release(view);
-	
-	//TODO: finish this
-	return Py_BuildValue();
+
+	return Py_BuildValue("y", reversed.data, reversed.size);
 }
 
 /* Reverse a sequence and extract the data with a copy */
 static PyObject *
 reverse_it(PyObject *self, PyObject *args){
 	PyObject* incoming;
+	PyObject* seq;
 	if(!PyArg_ParseTuple(args, "O", &incoming)){
 		return NULL;
 	}
-	//TODO: finish this
+	std::vector<char> original_data;
+    seq = PySequence_Fast(incoming, "expected a sequence");
+    len = PySequence_Size(incoming);
+    for (i = 0; i < len; i++) {
+        original_data.push_back(PySequence_Fast_GET_ITEM(seq, i));
+    }
+    Py_DECREF(seq);
+
+	std::vector<char> reversed = reverse_it(original_data)
+	return Py_BuildValue("y", reversed.data, reversed.size);
 }
 
 /* Methods for our reverser object*/
 static PyMethodDef ReverserMethods[] = {
-    {"reverse_it_fast", reverse_it_fast, METH_VARARGS, "Reverses the array using buffer interface"},
-    {"reverse_it", reverse_it, METH_VARARGS, "Reverses the array"},
+    {"reverse_it_fast", reverse_it_fast, METH_VARARGS, "Reverses the bytes array using buffer interface"},
+    {"reverse_it", reverse_it, METH_VARARGS, "Reverses the bytes array"},
     {NULL, NULL, 0, NULL} /* End of methods sential value */
 };
 
