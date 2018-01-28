@@ -25,7 +25,7 @@ reverse_it_fast(PyObject *self, PyObject *args){
 
     /* Fill the std::vector with the buffer contents */
     std::vector<char> original_data;
-	char* buffer_start = static_cast<char*>((&view.buf)[0]);
+    char* buffer_start = static_cast<char*>((&view.buf)[0]);
     original_data.assign(buffer_start, buffer_start + view.len);
     PyBuffer_Release(&view);
 
@@ -41,9 +41,9 @@ reverse_it(PyObject *self, PyObject *args){
     if(!PyArg_ParseTuple(args, "O", &incoming)){
         return NULL;
     }
-	char* data;
-	Py_ssize_t len;
-	PyBytes_AsStringAndSize(incoming, &data, &len);
+    char* data;
+    Py_ssize_t len;
+    PyBytes_AsStringAndSize(incoming, &data, &len);
     std::vector<char> original_data(data, data+len);
 
     reverse_it_impl(original_data);
