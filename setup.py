@@ -1,7 +1,8 @@
 from setuptools import Extension, setup
 
 c_extension = Extension(
-    sources="example.cpp",
+    name="reverser",
+    sources=["example.cpp"],
     language="cpp"
 )
 
