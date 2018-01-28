@@ -9,5 +9,6 @@ c_extension = Extension(
 setup(
     name='reverser',
     author='Janis Lesinskis',
-    description='buffer interface example'
+    description='buffer interface example',
+    ext_modules=[c_extension]
 )
