@@ -72,6 +72,6 @@ static struct PyModuleDef reverser_module = {
 
 /* Init code */
 PyMODINIT_FUNC
-PyInit_demo_module(void){
+PyInit_reverser(void){
     return PyModule_Create(&reverser_module);
 }
