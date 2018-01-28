@@ -3,8 +3,8 @@
 #include <vector>
 
 template<typename T>
-std::vector<T> reverse_it_impl(std::vector<T> in){
-    return std::reverse(in.begin(), in.end());
+void reverse_it_impl(std::vector<T>& in){
+    std::reverse(in.begin(), in.end());
 }
 
 
@@ -25,32 +25,29 @@ reverse_it_fast(PyObject *self, PyObject *args){
 
     /* Fill the std::vector with the buffer contents */
     std::vector<char> original_data;
-    original_data.assign(&view.buf, &view.buf + &view.len);
+	char* buffer_start = static_cast<char*>((&view.buf)[0]);
+    original_data.assign(buffer_start, buffer_start + view.len);
     PyBuffer_Release(&view);
 
-    std::vector<char> reversed_data = reverse_it_impl(original_data);
+    reverse_it_impl(original_data);
 
-    return Py_BuildValue("y#", reversed_data.data(), reversed_data.size());
+    return Py_BuildValue("y#", original_data.data(), original_data.size());
 }
 
 /* Reverse a sequence and extract the data with a copy */
 static PyObject *
 reverse_it(PyObject *self, PyObject *args){
     PyObject* incoming;
-    PyObject* seq;
     if(!PyArg_ParseTuple(args, "O", &incoming)){
         return NULL;
     }
-    std::vector<char> original_data;
-    seq = PySequence_Fast(incoming, "expected a sequence");
-    size_t len = PySequence_Size(incoming);
-    for (size_t i = 0; i < len; i++) {
-        original_data.push_back(PySequence_Fast_GET_ITEM(seq, i));
-    }
-    Py_DECREF(seq);
+	char* data;
+	Py_ssize_t len;
+	PyBytes_AsStringAndSize(incoming, &data, &len);
+    std::vector<char> original_data(data, data+len);
 
-    std::vector<char> reversed_data = reverse_it_impl(original_data);
-    return Py_BuildValue("y#", reversed_data.data(), reversed_data.size());
+    reverse_it_impl(original_data);
+    return Py_BuildValue("y#", original_data.data(), original_data.size());
 }
 
 /* Methods for our reverser object*/
@@ -64,8 +61,13 @@ static PyMethodDef ReverserMethods[] = {
 static struct PyModuleDef reverser_module = {
     PyModuleDef_HEAD_INIT,
     "reverser_module",
+    "Reverser module, written in c++",
     -1,
-    ReverserMethods
+    ReverserMethods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 
 /* Init code */
